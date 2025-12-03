@@ -34,6 +34,19 @@ class Model:
 
         self.dither_method = self.dither_method_list[2]
 
+    def get_ffmpeg_path(self):
+        import sys, os
+        if hasattr(sys, '_MEIPASS'):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        if sys.platform.startswith('win'):
+            return os.path.join(base_path, 'ffmpeg', 'Win', 'ffmpeg.exe')
+        elif sys.platform.startswith('darwin'):
+            return os.path.join(base_path, 'ffmpeg', 'Mac', 'ffmpeg')
+        else:
+            return 'ffmpeg'
+
     def convert_menu_scale(self, menu_scale):
         value = float(menu_scale.strip('%'))
         return 100.0 / value
@@ -119,7 +132,8 @@ class Model:
 
     def concatenate_cmdstr(self, file):
         self.set_output_filename(self.prefix)
-        self.ff_cmdstr = (f'ffmpeg -i "{file}" ' 
+        ffmpeg_path = self.get_ffmpeg_path()
+        self.ff_cmdstr = (f'"{ffmpeg_path}" -i \"{file}\" ' 
                           f'-vf "fps={self.fps},scale=iw/{self.scalediv}:ih/{self.scalediv}:flags=lanczos,'
                           f'split[s0][s1];'
                           f'[s0]palettegen=max_colors={self.max_colours}:stats_mode={self.stats_mode}[p];'
