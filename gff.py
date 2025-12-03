@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import shlex
+import threading
 import customtkinter as ui
 
 class Model:
@@ -200,38 +201,46 @@ class Control:
         self.view.output_input.xview('end')
 
     def generate_gif(self):
-        self.view.makegif_btn.configure(text="Generating...")  # Set to "please wait"
-        model.settings_from_menu(fps=self.view.fps_input.get(),
-                                 scale=self.view.scale_dd.get(),
-                                 colours=self.view.max_dd.get(),
-                                 dither=self.view.dith_dd.get(),
-                                 optimize=self.view.opt_dd.get(),
-                                 loops=self.view.loop_dd.get(),
-                                 output=self.view.output_input.get())
-        
-        if not self.model.output_dir or not os.path.exists(self.model.output_dir):
-            self.view.flash_red()
-            return
-        if self.model.input_file:
-            if not os.path.exists(self.model.input_file):
+        self.view.makegif_btn.configure(text="Generating...")  # Set button text immediately
+
+        def worker():
+            self.model.settings_from_menu(
+                fps=self.view.fps_input.get(),
+                scale=self.view.scale_dd.get(),
+                colours=self.view.max_dd.get(),
+                dither=self.view.dith_dd.get(),
+                optimize=self.view.opt_dd.get(),
+                loops=self.view.loop_dd.get(),
+                output=self.view.output_input.get()
+            )
+            if not self.model.output_dir or not os.path.exists(self.model.output_dir):
                 self.view.flash_red()
+                self.view.makegif_btn.configure(text="Generate Gif(s)!")
                 return
-            self.model.run_ffmpeg_cmdstr(self.model.input_file)
-        elif self.model.input_dir_files:
-            if len(self.model.input_dir_files) == 0:
+            if self.model.input_file:
+                if not os.path.exists(self.model.input_file):
+                    self.view.flash_red()
+                    self.view.makegif_btn.configure(text="Generate Gif(s)!")
+                    return
+                self.model.run_ffmpeg_cmdstr(self.model.input_file)
+            elif self.model.input_dir_files:
+                if len(self.model.input_dir_files) == 0:
+                    self.view.flash_red()
+                    self.view.makegif_btn.configure(text="Generate Gif(s)!")
+                    return
+                for file in self.model.input_dir_files:
+                    if not os.path.exists(file):
+                        continue
+                    self.model.run_ffmpeg_cmdstr(file)
+            else:
                 self.view.flash_red()
+                self.view.makegif_btn.configure(text="Generate Gif(s)!")
                 return
-            for file in self.model.input_dir_files:
-                if not os.path.exists(file):
-                    continue
-                self.model.run_ffmpeg_cmdstr(file)
-        else:
-            self.view.flash_red()
-            return
-        
-        self.model.open_output_folder()
-        self.view.flash_green()
-        self.view.makegif_btn.configure(text="Generate Gif(s)!")  # Reset to original
+            self.model.open_output_folder()
+            self.view.flash_green()
+            self.view.makegif_btn.configure(text="Generate Gif(s)!")  # Reset button text
+
+        threading.Thread(target=worker, daemon=True).start()
 
 
 
