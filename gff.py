@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import shlex
 import customtkinter as ui
 
 class Model:
@@ -31,6 +32,7 @@ class Model:
                                    'sierra2_4a',            # 7 Highest size
                                    'none']                  # 8 ugly
 
+        self.dither_method = self.dither_method_list[2]
 
     def convert_menu_scale(self, menu_scale):
         value = float(menu_scale.strip('%'))
@@ -117,19 +119,20 @@ class Model:
 
     def concatenate_cmdstr(self, file):
         self.set_output_filename(self.prefix)
-        self.ff_cmdstr = (f'ffmpeg -i {file} ' 
+        self.ff_cmdstr = (f'ffmpeg -i "{file}" ' 
                           f'-vf "fps={self.fps},scale=iw/{self.scalediv}:ih/{self.scalediv}:flags=lanczos,'
                           f'split[s0][s1];'
                           f'[s0]palettegen=max_colors={self.max_colours}:stats_mode={self.stats_mode}[p];'
                           f'[s1][p]paletteuse=dither={self.dither_method}:diff_mode={self.diff_mode}" '
                           f'-loop {self.loops} '
-                          f'{self.output_dir}/{self.output_filename} -y')
+                          f'"{self.output_dir}/{self.output_filename}" -y')
         print(f'string = {self.ff_cmdstr}')
 
     def run_ffmpeg_cmdstr(self, file):
         self.set_prefix_from_path(file)
         self.concatenate_cmdstr(file)
-        os.system(self.ff_cmdstr)
+        cmd = shlex.split(self.ff_cmdstr)
+        subprocess.run(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
         print(f'generating gif')
 
     def dithername_output(self):
@@ -224,8 +227,8 @@ class View(ui.CTk):
         ui.set_appearance_mode("dark")
         ui.set_default_color_theme("green")
         self.geometry("300x675")
-        self.title("I don't gif a f***")
-        # self.iconbitmap(os.path.join('icons','punch.ico'))
+        self.title("")
+        self.iconbitmap(os.path.join('settings','logo_w.ico'))
         self.resizable(False, False)
 
         # fps
@@ -260,6 +263,7 @@ class View(ui.CTk):
         self.dith_area = self.area(300,50,0,160,self)
         self.dith_text  = self.menu_text("Dither method:",20,12,self.dith_area)
         self.dith_dd = self.drop_down(125,35,155,7.5, self.control.model.rename_ditherlist(), self.dith_area)
+        self.dith_dd.set("Bayer 3") #setting bayer 3 as default
         self.dith_area.bind('<Enter>', self.dith_help)
         self.dith_text.bind('<Enter>', self.dith_help)
         self.dith_dd.bind('<Enter>', self.dith_help)
@@ -407,7 +411,7 @@ class View(ui.CTk):
     def overview_help(self, event):
         self.overview_helptext.configure(text=
         'Overview:\n\nThe options on the left are arranged from top ' \
-        'to bottom based on their typical impact on reducing file size.\n\n ' \
+        'to bottom based on how to approach reducing file size.\n\n ' \
         'Hover over any option to see more details here.')
 
     def fps_help(self, event):
