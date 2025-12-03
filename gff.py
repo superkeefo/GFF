@@ -425,7 +425,7 @@ class View(ui.CTk):
     def overview_help(self, event):
         self.overview_helptext.configure(text=
         'Overview:\n\nThe options on the left are arranged from top ' \
-        'to bottom based on how to approach reducing file size.\n\n ' \
+        'to bottom based on their priority for reducing file size.\n\n ' \
         'Hover over any option to see more details here.')
 
     def fps_help(self, event):
