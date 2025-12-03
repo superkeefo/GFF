@@ -5,6 +5,11 @@ import shlex
 import threading
 import customtkinter as ui
 
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 class Model:
     def __init__(self):
         self.setstamp = True
@@ -253,7 +258,7 @@ class View(ui.CTk):
         ui.set_default_color_theme("green")
         self.geometry("300x675")
         self.title("")
-        self.iconbitmap(os.path.join('settings','logo_w.ico'))
+        self.iconbitmap(resource_path(os.path.join('settings', 'logo_w.ico')))
         self.resizable(False, False)
 
         # fps
