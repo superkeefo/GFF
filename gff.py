@@ -200,6 +200,7 @@ class Control:
         self.view.output_input.xview('end')
 
     def generate_gif(self):
+        self.view.makegif_btn.configure(text="Generating...")  # Set to "please wait"
         model.settings_from_menu(fps=self.view.fps_input.get(),
                                  scale=self.view.scale_dd.get(),
                                  colours=self.view.max_dd.get(),
@@ -230,6 +231,7 @@ class Control:
         
         self.model.open_output_folder()
         self.view.flash_green()
+        self.view.makegif_btn.configure(text="Generate Gif(s)!")  # Reset to original
 
 
 
