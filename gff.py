@@ -106,10 +106,10 @@ class Model:
         self.prefix = name
 
     def set_input_file(self):
-        input_file = ui.filedialog.askopenfilename()
-        self.input_file = input_file
+        input_files = ui.filedialog.askopenfilenames()
+        self.input_file = None
         self.input_dir = None
-        self.input_dir_files = None
+        self.input_dir_files = list(input_files) if input_files else None
 
     def set_input_dir(self):
         input_dir = ui.filedialog.askdirectory()
@@ -222,13 +222,7 @@ class Control:
                 self.view.flash_red()
                 self.view.makegif_btn.configure(text="Generate Gif(s)!")
                 return
-            if self.model.input_file:
-                if not os.path.exists(self.model.input_file):
-                    self.view.flash_red()
-                    self.view.makegif_btn.configure(text="Generate Gif(s)!")
-                    return
-                self.model.run_ffmpeg_cmdstr(self.model.input_file)
-            elif self.model.input_dir_files:
+            if self.model.input_dir_files:
                 if len(self.model.input_dir_files) == 0:
                     self.view.flash_red()
                     self.view.makegif_btn.configure(text="Generate Gif(s)!")
@@ -237,6 +231,12 @@ class Control:
                     if not os.path.exists(file):
                         continue
                     self.model.run_ffmpeg_cmdstr(file)
+            elif self.model.input_file:
+                if not os.path.exists(self.model.input_file):
+                    self.view.flash_red()
+                    self.view.makegif_btn.configure(text="Generate Gif(s)!")
+                    return
+                self.model.run_ffmpeg_cmdstr(self.model.input_file)
             else:
                 self.view.flash_red()
                 self.view.makegif_btn.configure(text="Generate Gif(s)!")
@@ -321,12 +321,12 @@ class View(ui.CTk):
         self.input_text = self.menu_text("Select input:",20,320,self)
         self.input_text.configure(font = ('Roboto Bold', 16))
         self.input_area = self.area(300, 60, 0, 350, self)
-        self.single_file_btn = self.btn(125,40,"Single File",20,10, self.control.find_file_location ,self.input_area)
+        self.single_file_btn = self.btn(260,40,"Select File(s)",20,10, self.control.find_file_location ,self.input_area)
         self.single_file_btn.bind('<Enter>', self.single_help)
         self.single_file_btn.bind('<Leave>', self.overview_help)
-        self.folder_btn = self.btn(125,40,"Folder",155,10, self.control.find_folder_location ,self.input_area)
-        self.folder_btn.bind('<Enter>', self.folder_help)
-        self.folder_btn.bind('<Leave>', self.overview_help)
+        #self.folder_btn = self.btn(125,40,"Folder",155,10, self.control.find_folder_location ,self.input_area)
+        #self.folder_btn.bind('<Enter>', self.folder_help)
+        #self.folder_btn.bind('<Leave>', self.overview_help)
 
         # Set output
         self.output_text = self.menu_text("Select save location:",20,415,self)
@@ -485,8 +485,8 @@ class View(ui.CTk):
 
     def single_help(self, event):
         self.overview_helptext.configure(text=
-        'Single File:\n\n This button is for when you want to convert ' \
-        'a single ".mp4" or ".mov" file.')
+        'Select File(s):\n\n Select a single (or multiple) ".mp4" or ".mov" ' \
+        'file(s) to convert to gif.')
     
     def folder_help(self, event):
         self.overview_helptext.configure(text=
